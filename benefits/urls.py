@@ -24,13 +24,11 @@ urlpatterns = [
     path("cartapi",views.cartapi, name="cartapi"),
     path("checkout",views.checkout, name="checkout"),
     path("viewbenefits",views.viewbenefits, name="viewbenefits"),
-    path("viewbenefitsapi",views.viewbenefitsapi, name="viewbenefitsapi"),
     path("redeemitems",views.redeemitems, name="redeemitems"),
     path("redemptionhistory",views.redemptionhistory, name="redemptionhistory"),
     path("viewsales", views.viewsales, name="viewsales"),
     path("editlisting/<str:id>/", views.editlisting, name="editlisting"),
     path("viewemployees", views.viewemployees, name="viewemployees"),
     path("search/", views.search, name="search"),
-    path("searchapi/", views.searchapi, name="searchapi"),
     path("searchresults/<str:searchQuery>/", views.searchresults, name="searchresults")
 ]

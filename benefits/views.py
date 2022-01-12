@@ -763,8 +763,6 @@ def checkout(request):
             "message": "You do not have permission to view this page. "
         })
 
-
-
 @login_required
 def viewbenefits(request):
     if request.method=="GET":
@@ -794,29 +792,6 @@ def viewbenefits(request):
             return render(request, "benefits/error.html", {
                 "message": "The purchased benefits page is only applicable to employee users."
         })
-
-# @csrf_exempt
-@api_view(['GET'])
-def viewbenefitsapi(request, *args, **kwargs):
-    is_employee = request.user.is_employee
-    if is_employee:
-        employeeUserObject = EmployeeUser.objects.get(user=request.user)
-        benefitsTupleList = parseBenefitsList(employeeUserObject.benefits)
-        benefitList = []
-        serialNumber = 0
-        for benefitsTuple in benefitsTupleList:
-            benefitDict = {}
-            benefit = Benefits.objects.get(id=int(benefitsTuple[0]))
-            title = benefit.title
-            description = benefit.description
-            provider = benefit.provider.id
-            imageurl = benefit.imageurl
-            quantity = benefitsTuple[1]
-            benefitDict = {"id": int(benefitsTuple[0]), "title": title, "description": description,\
-                 "provider": provider, "imageurl": imageurl, "quantity": quantity}
-            benefitList.append(benefitDict)
-    return Response(data=benefitList, status=status.HTTP_200_OK)
-
 
 @login_required
 def redeemitems(request):
@@ -869,55 +844,6 @@ def redeemitems(request):
         return render(request, "benefits/error.html", {
                 "message": "Invalid Request Type."
         })
-
-@csrf_exempt
-@api_view(['POST'])
-def redeemitemsapi(request, *args, **kwargs):
-    is_employee = request.user.is_employee
-    if is_employee:
-        redeemtype = request.POST["redeemtype"]
-        itemid = request.POST["itemid"]
-        employeeUserObject = EmployeeUser.objects.get(user=request.user)
-        benefitsTupleList = parseBenefitsList(employeeUserObject.benefits)
-        quantityRedeemed = 0
-        benefitsObject = Benefits.objects.get(id=int(itemid))
-        for benefitsListIndex, benefitsTuple in enumerate(benefitsTupleList):
-            if int(benefitsTuple[0]) == int(itemid):
-                if redeemtype == "all":
-                    quantityRedeemed = benefitsTuple[1]
-                    benefitsTupleList.remove(benefitsTuple)
-                elif redeemtype == "single":
-                    quantity = int(benefitsTuple[1])
-                    quantityRedeemed = 1
-                    if quantity > 1:
-                        new_quantity = quantity - 1
-                        benefitsTupleList[benefitsListIndex] = (benefitsTuple[0], new_quantity)
-                    else: 
-                        benefitsTupleList.remove(benefitsTuple)
-        benefitsString = packageBenefitsList(benefitsTupleList)
-        employeeUserObject.benefits = benefitsString
-        employeeUserObject.save()
-
-        if quantityRedeemed > 0:
-            #Log redemption
-            listingID = benefitsObject
-            buyer = employeeUserObject
-            buyerCompany = employeeUserObject.company
-            seller = benefitsObject.provider
-            redemptionObject = RedemptionHistory.objects.create(
-                listingID = listingID,
-                quantityRedeemed = quantityRedeemed,
-                buyer = buyer,
-                buyerCompany = buyerCompany,
-                seller = seller
-            )
-            redemptionObject.save()
-            successmessage = {"error": False, "message": "Redemption Successful"}
-            return Response(data=successmessage, status=status.HTTP_200_OK)
-        
-        errormessage = {"error": True, "message": "Error Performing Redemption"}
-        return Response(data=errormessage, status=status.HTTP_200_OK)
-
 
 @login_required
 def redemptionhistory(request):
@@ -1100,10 +1026,6 @@ def search(request):
                 searchStringOut = searchStringOut + "+"
         return HttpResponseRedirect(reverse('searchresults', kwargs={'searchQuery': searchStringOut}))
 
-@api_view(["POST"])
-def searchapi(request):
-    # TODO
-    pass
 
 def searchresults(request, searchQuery):
     searchString = ""
